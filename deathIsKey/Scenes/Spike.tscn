@@ -1,0 +1,66 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://assets/tilesets/tileset.tres" type="TileSet" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Area2D
+
+var tilemap
+
+func _ready():
+	tilemap = get_node(\"TileMap\")
+
+var isSpike=true
+
+func _on_Spike_body_entered(body):
+	if body.name==\"Player\":
+		#body.find_node(\"Particles2D\").emitting=true
+		#body.find_node(\"Particles2D2\").emitting=true
+		#body.find_node(\"Particles2D\").restart()
+		#body.find_node(\"Particles2D2\").restart()
+		
+		isSpike=false
+		
+		for node in get_node(\"..\").get_children():
+			if node.get_filename() == get_filename() and node.name != name and !node.isSpike:
+				node.tilemap.set_cell(-1,-1,6)
+				get_node(\"..\").find_node(\"Level\").set_cell(node.position.x/8-1,node.position.y/8-1,-1)
+				get_node(\"..\").find_node(\"Level\").set_cell(node.position.x/8,node.position.y/8-1,-1)
+				get_node(\"..\").find_node(\"Level\").set_cell(node.position.x/8-1,node.position.y/8,-1)
+				get_node(\"..\").find_node(\"Level\").set_cell(node.position.x/8,node.position.y/8,-1)
+				get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(node.position.x/8-1,node.position.y/8-1))
+				get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(node.position.x/8,node.position.y/8-1))
+				get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(node.position.x/8-1,node.position.y/8))
+				get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(node.position.x/8,node.position.y/8))
+				node.isSpike=true
+		
+		get_node(\"..\").find_node(\"Level\").set_cell(position.x/8-1,position.y/8-1,0)
+		get_node(\"..\").find_node(\"Level\").set_cell(position.x/8,position.y/8-1,0)
+		get_node(\"..\").find_node(\"Level\").set_cell(position.x/8-1,position.y/8,0)
+		get_node(\"..\").find_node(\"Level\").set_cell(position.x/8,position.y/8,0)
+		tilemap.set_cell(-1,-1,-1)
+		get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(position.x/8-1,position.y/8-1))
+		get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(position.x/8,position.y/8-1))
+		get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(position.x/8-1,position.y/8))
+		get_node(\"..\").find_node(\"Level\").update_bitmask_area(Vector2(position.x/8,position.y/8))
+		
+		body.alive=false
+		body.find_node(\"Sprite\").visible=false
+"
+
+[sub_resource type="ConvexPolygonShape2D" id=2]
+points = PoolVector2Array( 0, -10, 8, 6, -8, 6 )
+
+[node name="Spike" type="Area2D"]
+script = SubResource( 1 )
+
+[node name="TileMap" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 8, 8 )
+format = 1
+tile_data = PoolIntArray( -1, 6, 0 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( 0, 2 )
+shape = SubResource( 2 )
+[connection signal="body_entered" from="." to="." method="_on_Spike_body_entered"]

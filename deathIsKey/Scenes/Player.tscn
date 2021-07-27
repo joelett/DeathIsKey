@@ -1,0 +1,148 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://assets/tilesets/testTileset.png" type="Texture" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "tool
+extends KinematicBody2D
+
+func _ready():
+	spawn = position
+	find_node(\"Camera2D\").current=camera_follow
+	adjustCamera()
+
+var spawn
+export var camera_follow=false
+
+const JUMP_FORCE = 150
+const SPEED = 50
+const GRAVITY = 400
+const UP_VECTOR = Vector2(0,-1)
+var move = Vector2()
+
+var alive = true
+var timer = 0
+var maxTimer = 1
+
+export var cam_limit_left=-10000000
+export var cam_limit_top=-10000000
+export var cam_limit_right=10000000
+export var cam_limit_bottom=10000000
+
+func adjustCamera():
+	get_node(\"Camera2D\").limit_left=cam_limit_left
+	get_node(\"Camera2D\").limit_top=cam_limit_top
+	get_node(\"Camera2D\").limit_right=cam_limit_right
+	get_node(\"Camera2D\").limit_bottom=cam_limit_bottom
+
+func _process(delta):
+	if Engine.editor_hint:
+		adjustCamera()
+	
+	if !Engine.editor_hint:
+		if alive:
+			
+			move.x=0
+			
+			if is_on_ceiling() or is_on_floor():
+				move.y=0
+			
+			move.y+=GRAVITY*delta
+			
+			check_input()
+			
+			move_and_slide(move,UP_VECTOR)
+		else:
+			if timer>=maxTimer:
+				position=spawn
+				alive=true
+				$Sprite.visible=true
+				timer=0
+			else:
+				timer+=delta
+
+func check_input():
+	if Input.is_action_pressed(\"left\"):
+		move.x=-SPEED
+	if Input.is_action_pressed(\"right\"):
+		move.x=SPEED
+	if Input.is_action_just_pressed(\"jump\") and is_on_floor():
+			move.y=-JUMP_FORCE"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 3, 3 )
+
+[sub_resource type="Curve" id=3]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), -4.25095, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=4]
+curve = SubResource( 3 )
+
+[sub_resource type="ParticlesMaterial" id=5]
+flag_disable_z = true
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+initial_velocity = 20.0
+initial_velocity_random = 1.0
+angular_velocity = 26.32
+angular_velocity_random = 1.0
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+damping = 5.0
+scale_curve = SubResource( 4 )
+
+[sub_resource type="Curve" id=6]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), -4.40291, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=7]
+curve = SubResource( 6 )
+
+[sub_resource type="ParticlesMaterial" id=8]
+flag_disable_z = true
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+initial_velocity = 20.0
+initial_velocity_random = 0.56
+angular_velocity = 12.8946
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+damping = 10.0
+angle = 248.3
+angle_random = 1.0
+scale_curve = SubResource( 7 )
+color = Color( 0, 0, 0, 1 )
+
+[node name="Player" type="KinematicBody2D"]
+script = SubResource( 1 )
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 1 )
+vframes = 8
+hframes = 11
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 2 )
+
+[node name="Particles2D" type="Particles2D" parent="."]
+emitting = false
+amount = 36
+lifetime = 2.0
+one_shot = true
+explosiveness = 1.0
+randomness = 1.0
+local_coords = false
+process_material = SubResource( 5 )
+
+[node name="Particles2D2" type="Particles2D" parent="."]
+emitting = false
+amount = 28
+lifetime = 2.0
+one_shot = true
+explosiveness = 1.0
+randomness = 1.0
+local_coords = false
+process_material = SubResource( 8 )
+
+[node name="Camera2D" type="Camera2D" parent="."]
+editor_draw_limits = true
+editor_draw_drag_margin = true
